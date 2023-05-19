@@ -54,11 +54,32 @@ router.post('/', async (req, res, next) => {
 })
 
 router.delete('/:contactId', async (req, res, next) => {
-  res.status(200).json(JSON.parce(removeContact(req.id)))
+  try {
+    const result = await removeContact(req.id);
+    if (!result) {
+      throw HttpError(404, "Not found")
+    }
+
+    res.json(result)    
+  } catch (error) {
+    next(error);
+  }
 })
 
 router.put('/:contactId', async (req, res, next) => {
-  res.json(JSON.parce(updateContact(req.id, req.body)))
+  try {
+    const { error } = addSchema.validate(req.body);
+
+    if (error) {
+      throw HttpError(400, "missing fields");
+    }
+
+    res.json(updateContact(req.id, req.body));
+    
+  } catch (error) {
+    next(error)    
+  }
+
 })
 
 module.exports = router

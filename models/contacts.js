@@ -59,7 +59,7 @@ async function updateContact(contactId, body) {
     contacts.push(newContact);
 
     await fs.writeFile(contactsPath, JSON.stringify(contacts), "utf8");
-    return newContact;
+    return JSON.parce(newContact);
 } 
 
 module.exports = {
