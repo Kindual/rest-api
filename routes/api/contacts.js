@@ -1,16 +1,9 @@
 const express = require('express')
 const { listContacts, getContactById, addContact, removeContact, updateContact } = require('../../models/contacts');
 const { HttpError } = require('../../helpers');
-
-const Joi = require('joi');
+const { ContactSchema } = require('../../schemas');
 
 const router = express.Router()
-
-const addSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().email().required(),
-  phone: Joi.string().required(),
-})
 
 router.get('/', async (req, res, next) => {
   try {
@@ -26,7 +19,7 @@ router.get('/:contactId', async (req, res, next) => {
     const result = await getContactById(req.params.contactId);
 
     if (!result) {
-      throw HttpError(404, "Not found")
+      throw new HttpError(404, "Not found").returnError();
     }
     
     res.json(result);
@@ -38,9 +31,9 @@ router.get('/:contactId', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { error } = addSchema.validate(req.body);
+    const { error } = ContactSchema.validate(req.body);
     if (error) {
-      throw HttpError(400, "missing required name field");
+      throw new HttpError(400, `missing required name field: ${error.message}`).returnError();
     }
     const result = await addContact(req.body);;
     
@@ -56,7 +49,7 @@ router.delete('/:contactId', async (req, res, next) => {
   try {
     const result = await removeContact(req.params.contactId);
     if (!result) {
-      throw HttpError(404, "Not found")
+      throw new HttpError(404, "Not found").returnError();
     }
 
     res.json(result)    
@@ -67,9 +60,9 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
-    const { error } = addSchema.validate(req.body);
+    const { error } = ContactSchema.validate(req.body);
     if (error) {
-      throw HttpError(400, "missing fields");
+      throw new HttpError(400, "missing fields").returnError();
     }
     
     const result = await updateContact(req.params.contactId, req.body)
