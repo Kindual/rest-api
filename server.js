@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const app = require('./app');
+const { NewContact } = require('./schemas');
 const { DB_HOST } = process.env;
 
 mongoose.connect(DB_HOST)
@@ -13,3 +14,4 @@ mongoose.connect(DB_HOST)
     process.exit(1);
   })
 
+  NewContact({name: 'Oleksiy', phone: '9379992', email: 'eboy@gc.com' })

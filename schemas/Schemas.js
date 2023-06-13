@@ -11,4 +11,6 @@ const ContactShemas = Joi.object({
   }).required(),
 });
 
-module.exports = ContactShemas;
+module.exports = {
+  ContactShemas,
+}
