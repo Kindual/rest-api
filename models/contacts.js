@@ -1,66 +1,50 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { nanoid } = require('nanoid');
-
-const contactsPath = path.join(__dirname, "contacts.json");
+const { Contact } = require("../schemas/Schemas");
 
 async function listContacts() {
-  const data = await fs.readFile(contactsPath);
-  return JSON.parse(data);
+  const data = await Contact.find();
+  return data;
 }
 
 async function getContactById(contactId) {
-  const contacts = await listContacts();
+  const data = await Contact.findById(contactId)
 
-  const contactIdString = contactId.toString();
-  const contactById = contacts.find(
-    contact => contact.id === contactIdString
-  );
-
-  if (!contactById) {
+  if (!data) {
     return null;
   }
-  return contactById;
+
+  return data;
 }
 
 async function removeContact(contactId) {
-  const contactsById = await getContactById(contactId);
-  if (!contactsById) {
-    return null;
+  const data = await Contact.findByIdAndDelete(contactId)
+
+  if (!data) {
+    return { "message": "contact not found" };
   }
 
-  const contacts = await listContacts();
-
-  const contactIdString = contactId.toString();
-  const newContactsList = contacts.filter(
-    (contact) => contact.id !== contactIdString
-  );
-  await fs.writeFile(contactsPath, JSON.stringify(newContactsList), "utf8");
   return { "message": "contact deleted" };
 }
 
 async function addContact(body) {
   const { name, email, phone } = body;
-  const contacts = await listContacts();
-
-  const newContact = { id: nanoid(17), name, email, phone };
-  contacts.push(newContact);
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts), "utf8");
-
+  
+  const newContact = Contact.create({ name, email, phone })
   return newContact;
 }
 
 async function updateContact(contactId, body) {
-  await removeContact(contactId);
-  const contacts = await listContacts();
+  const data = await Contact.findByIdAndUpdate(contactId, body, {new: true});
 
-  const newContact = { id: contactId, ...body };
-  contacts.push(newContact);
-
-  await fs.writeFile(contactsPath, JSON.stringify(contacts), "utf8");
-  return newContact;
+  return data;
 }
+
+async function updateStatusContact (contactId, body) {
+  const data = await Contact.findByIdAndUpdate(contactId, {favorite: body.favorite}, {new: true});
+
+  return data;
+}
+
+
 
 module.exports = {
   listContacts,
@@ -68,4 +52,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  updateStatusContact,
 }
