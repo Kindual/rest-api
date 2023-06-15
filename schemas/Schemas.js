@@ -1,26 +1,31 @@
 const Joi = require("joi");
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, Schema } = require("mongoose");
 
 const contactSchema = new mongoose.Schema({
   name: {
-      type: String,
-      required: [true, 'Set name for contact'],
+    type: String,
+    required: [true, 'Set name for contact'],
   },
   email: {
-      type: String,
+    type: String,
   },
   phone: {
-      type: String,
+    type: String,
   },
   favorite: {
-      type: Boolean,
-      default: false,
+    type: Boolean,
+    default: false,
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'user',
+    required: true,
   }
 })
 
 const Contact = mongoose.model('Contact', contactSchema);
 
-const ContactShemas = Joi.object({
+const ContactSchemas = Joi.object({
   name: Joi.string().required(),
 
   phone: Joi.string().min(5).max(30).required(),
@@ -29,6 +34,8 @@ const ContactShemas = Joi.object({
     minDomainSegments: 2,
     tlds: { allow: ["com", "net"] },
   }).required(),
+
+  favorite: Joi.boolean(),
 });
 
 const FavoriteSchema = Joi.object({
@@ -36,7 +43,7 @@ const FavoriteSchema = Joi.object({
 })
 
 module.exports = {
-  ContactShemas,
-  Contact,
+  ContactSchemas,
   FavoriteSchema,
+  Contact,
 }
