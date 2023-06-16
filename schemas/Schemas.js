@@ -1,42 +1,40 @@
 const Joi = require("joi");
-const { default: mongoose } = require("mongoose");
 
-const contactSchema = new mongoose.Schema({
-  name: {
-      type: String,
-      required: [true, 'Set name for contact'],
-  },
-  email: {
-      type: String,
-  },
-  phone: {
-      type: String,
-  },
-  favorite: {
-      type: Boolean,
-      default: false,
-  }
-})
+const contactBodySchema = Joi.object({
+    name: Joi.string().required(),
 
-const Contact = mongoose.model('Contact', contactSchema);
+    phone: Joi.string().min(5).max(30).required(),
 
-const ContactShemas = Joi.object({
-  name: Joi.string().required(),
+    email: Joi.string().email({
+        minDomainSegments: 2,
+        tlds: { allow: ["com", "net"] },
+    }).required(),
 
-  phone: Joi.string().min(5).max(30).required(),
-
-  email: Joi.string().email({
-    minDomainSegments: 2,
-    tlds: { allow: ["com", "net"] },
-  }).required(),
+    favorite: Joi.boolean(),
 });
 
-const FavoriteSchema = Joi.object({
-  favorite: Joi.boolean().required("missing field favorite"),
+const contactFavoriteSchema = Joi.object({
+    favorite: Joi.boolean().required("missing field favorite"),
 })
 
-module.exports = {
-  ContactShemas,
-  Contact,
-  FavoriteSchema,
+const userRegisterSchema = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().required(),
+    password: Joi.string().min(6).required(),
+})
+
+const userLoginSchema = Joi.object({
+    email: Joi.string().required(),
+    password: Joi.string().min(6).required(),
+})
+
+
+const schemas = {
+    contactBodySchema,
+    contactFavoriteSchema,
+    
+    userRegisterSchema,
+    userLoginSchema,
 }
+
+module.exports = schemas;
