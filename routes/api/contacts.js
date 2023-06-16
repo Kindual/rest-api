@@ -1,8 +1,9 @@
 const express = require('express')
 const { listContacts, getContactById, addContact, removeContact, updateContact, updateStatusContact } = require('../../controllers/contacts');
 const { HttpError } = require('../../helpers');
-const { ContactSchemas, FavoriteSchema } = require('../../schemas/Schemas');
 const { authenticate } = require('../../middlewares');
+const validateBody = require('../../middlewares/validateBody');
+const { schemas } = require('../../schemas');
 
 const router = express.Router()
 
@@ -36,14 +37,10 @@ router.get('/:contactId', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', validateBody(schemas.contactBodySchema), async (req, res, next) => {
   try {
     const { _id: owner } = req.user;
 
-    const { error } = ContactSchemas.validate(req.body);
-    if (error) {
-      throw new HttpError(400, `Nee missing required name field: ${error.message}`).returnError();
-    }
     const result = await addContact({ ...req.body, owner });
     console.log(result)
 
@@ -69,12 +66,8 @@ router.delete('/:contactId', async (req, res, next) => {
   }
 })
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', validateBody(schemas.contactBodySchema), async (req, res, next) => {
   try {
-    const { error } = ContactSchemas.validate(req.body);
-    if (error) {
-      throw new HttpError(400, "missing fields").returnError();
-    }
     const { _id } = req.user;
 
     const result = await updateContact(req.params.contactId, req.body, _id)
@@ -88,13 +81,8 @@ router.put('/:contactId', async (req, res, next) => {
   }
 })
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', validateBody(schemas.contactFavoriteSchema), async (req, res, next) => {
   try {
-    const { error } = FavoriteSchema.validate(req.body);
-    if (error) {
-      throw new HttpError(400, "missing field favorite").returnError();
-    }
-
     const { _id } = req.user;
 
     const result = await updateStatusContact(req.params.contactId, req.body, _id)

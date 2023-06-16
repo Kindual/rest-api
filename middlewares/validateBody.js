@@ -1,12 +1,13 @@
 const { HttpError } = require("../helpers");
-const { ContactSchemas } = require("../schemas/Schemas");
 
+const validateBody = (schema) => {
+    return (req, res, next) => {
+        const result = schema.validate(req.body);
+        if (result.error) {
+            return next(new HttpError(422, result.error));
+        }
+        next();
+    };
+};
 
-const isValideBody = (req, res, next) => {
-    const body = req.params.body;
-    if(!ContactSchemas.validate(body)) {
-        throw new HttpError(404, 'not valide')
-    }
-}
-
-module.exports = isValideBody;
+module.exports = validateBody;

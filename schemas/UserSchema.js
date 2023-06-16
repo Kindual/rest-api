@@ -1,4 +1,3 @@
-const Joi = require("joi");
 const { default: mongoose } = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
@@ -32,20 +31,4 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-const userRegisterSchema = Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string().required(),
-    password: Joi.string().min(6).required(),
-})
-
-const userLoginSchema = Joi.object({
-    email: Joi.string().required(),
-    password: Joi.string().min(6).required(),
-})
-
-const schemas = {
-    userRegisterSchema,
-    userLoginSchema,
-}
-
-module.exports = { User, schemas }; 
+module.exports = User; 

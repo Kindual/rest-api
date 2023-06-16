@@ -1,16 +1,11 @@
 const bcrypt = require('bcrypt')
 const { HttpError } = require("../helpers");
-const { schemas, User } = require("../schemas/UserSchema");
 const jwt = require('jsonwebtoken');
+const { User } = require('../schemas');
 
 const { SECRET_KEY } = process.env;
 
 async function register(req, res, next) {
-    const { error } = schemas.userRegisterSchema.validate(req.body);
-    if (error) {
-        throw new HttpError(400, `missing required name field: ${error.message}`).returnError();
-    }
-
     const newUser = {
         name: req.body.name,
         email: req.body.email,
@@ -40,25 +35,18 @@ async function register(req, res, next) {
 }
 
 async function login(req, res, next) {
-    const { error } = schemas.userLoginSchema.validate(req.body);
-    if (error) {
-        throw new HttpError(400, `missing required name field: ${error.message}`).returnError();
-    }
-
     const { email, password } = req.body;
 
     try {
         const user = await User.findOne({ email })
 
         if (!user) {
-            // return res.status(401).json({ error: "Email or password is incorrect" })
             throw new HttpError(401, "Email or password is wrong").returnError;
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            // return res.status(401).json({ error: "Email or password is wrong" })
             throw new HttpError(401, "Email or password is wrong").returnError;
 
         }
