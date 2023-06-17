@@ -1,5 +1,4 @@
-const { HttpError } = require("../helpers");
-const ctrlWrapper = require("../helpers/ctrlWrapper");
+const { HttpError, ctrlWrapper } = require("../helpers");
 const { Contact } = require("../schemas");
 
 async function listContacts(req, res, next) {
