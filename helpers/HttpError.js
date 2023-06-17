@@ -1,11 +1,8 @@
-const HttpError = class {
+class HttpError {
     constructor(status, message) {
-        this.error = new Error(message);
-        this.error.status = status;
-    }
-    
-    returnError() {
-        return this.error
+        this.message = message;
+        this.name = "Error";
+        this.status = status;
     }
 }
 

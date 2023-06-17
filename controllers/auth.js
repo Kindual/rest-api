@@ -21,7 +21,7 @@ async function register(req, res, next) {
     const currentUser = await User.findOne({ email: newUser.email });
 
     if (currentUser) {
-        throw new HttpError(409, "Email in use").returnError();
+        throw new HttpError(409, "Email in use");
     }
 
     newUser.password = await bcrypt.hash(newUser.password, 10);
@@ -53,17 +53,17 @@ async function login(req, res, next) {
     const user = await User.findOne({ email })
 
     if (!user) {
-        throw new HttpError(401, "Email or password is wrong").returnError();
+        throw new HttpError(401, "Email or password is wrong");
     }
 
     if (!user.verify) {
-        throw new HttpError(401, "Email not verified").returnError();
+        throw new HttpError(401, "Email not verified");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-        throw new HttpError(401, "Email or password is wrong").returnError();
+        throw new HttpError(401, "Email or password is wrong");
     }
 
     const { _id: id } = user;
@@ -86,15 +86,11 @@ async function login(req, res, next) {
 async function verifyEmail(req, res, next) {
     const { verificationToken } = req.params;
     const user = await User.findOne({ verificationToken });
-    console.log(user)
 
     if (user === null) {
-        throw new HttpError(401, 'User not found').returnError();
+        throw new HttpError(401, 'User not found');
     }
-
-    console.log(11)
-    const test = await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: null }, { new: true })
-    console.log(test);
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: null }, { new: true })
 
     res.json({
         message: 'Verification successful'
@@ -105,10 +101,10 @@ async function resendVerifyEmail(req, res, next) {
     const { email } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-        throw new HttpError(401, "Email not found").returnError();
+        throw new HttpError(401, "Email not found");
     }
     if (user.verify) {
-        throw new HttpError(400, "Verification has already been passed").returnError();
+        throw new HttpError(400, "Verification has already been passed");
     }
 
     const verifyEmail = {

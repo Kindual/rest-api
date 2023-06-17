@@ -12,7 +12,7 @@ async function getContactById(req, res, next) {
   const result = await Contact.findOne({ _id: req.params.contactId, owner: _id })
 
   if (!result) {
-    throw new HttpError(404, "Not found").returnError();
+    throw new HttpError(404, "Not found");
   }
 
   res.json(result);
@@ -39,7 +39,7 @@ async function updateContact(req, res, next) {
   const result = await Contact.findOneAndUpdate({ _id: req.params.contactId, owner: _id }, req.body, { new: true });
   
   if (!result) {
-    throw new HttpError(404, "Not found").returnError();
+    throw new HttpError(404, "Not found");
   }
 
   res.json(result);
@@ -50,7 +50,7 @@ async function updateStatusContact(req, res, next) {
   const result = await Contact.findOneAndUpdate({ _id: req.params.contactId, owner: _id }, {favorite: req.body.favorite}, { new: true });
   
   if (!result) {
-    throw new HttpError(404, "Not found").returnError();
+    throw new HttpError(404, "Not found");
   }
   
   res.json(result);
