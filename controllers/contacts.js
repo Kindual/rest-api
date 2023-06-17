@@ -1,54 +1,67 @@
+const { HttpError } = require("../helpers");
+const ctrlWrapper = require("../helpers/ctrlWrapper");
 const { Contact } = require("../schemas");
 
-async function listContacts(id) {
-  const data = await Contact.find({ owner: id });
-  return data;
+async function listContacts(req, res, next) {
+  const { id } = req.user;
+  const result = await Contact.find({ owner: id });
+  res.json(result)
 }
 
-async function getContactById(contactId, owner) {
-  const data = await Contact.findOne({ _id: contactId, owner })
+async function getContactById(req, res, next) {
+  const { _id } = req.user;
+  const result = await Contact.findOne({ _id: req.params.contactId, owner: _id })
 
-  if (!data) {
-    return null;
+  if (!result) {
+    throw new HttpError(404, "Not found").returnError();
   }
 
-  return data;
+  res.json(result);
 }
 
-async function removeContact(contactId, owner) {
-  const data = await Contact.findOneAndDelete({ _id: contactId, owner })
-
-  if (!data) {
+async function removeContact(req, res, next) {
+  const { _id } = req.user;
+  const result = await Contact.findOneAndDelete({ _id: req.params.contactId, owner: _id })
+  if (!result) {
     return { "message": "contact not found" };
   }
 
-  return { "message": "contact deleted" };
+  res.json({ "message": "contact deleted" })
 }
 
-async function addContact(body) {
-  const newContact = Contact.create({ ...body })
-  return newContact;
+async function addContact(req, res, next) {
+  const { _id: owner } = req.user;
+  const result = await Contact.create({ ...req.body, owner })
+  res.status(201).json(result);
 }
 
-async function updateContact(contactId, body, owner) {
-  const data = await Contact.findOneAndUpdate({ _id: contactId, owner }, body, { new: true });
+async function updateContact(req, res, next) {
+  const { _id } = req.user;
+  const result = await Contact.findOneAndUpdate({ _id: req.params.contactId, owner: _id }, req.body, { new: true });
+  
+  if (!result) {
+    throw new HttpError(404, "Not found").returnError();
+  }
 
-  return data;
+  res.json(result);
 }
 
-async function updateStatusContact(contactId, body, owner) {
-  const data = await Contact.findOneAndUpdate({ _id: contactId, owner }, { favorite: body.favorite }, { new: true });
-
-  return data;
+async function updateStatusContact(req, res, next) {
+  const { _id } = req.user;
+  const result = await Contact.findOneAndUpdate({ _id: req.params.contactId, owner: _id }, {favorite: req.body.favorite}, { new: true });
+  
+  if (!result) {
+    throw new HttpError(404, "Not found").returnError();
+  }
+  
+  res.json(result);
 }
-
-
 
 module.exports = {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-  updateStatusContact,
+  listContacts: ctrlWrapper(listContacts),
+  getContactById: ctrlWrapper(getContactById),
+  removeContact: ctrlWrapper(removeContact),
+  addContact: ctrlWrapper(addContact),
+  updateContact: ctrlWrapper(updateContact),
+  updateStatusContact: ctrlWrapper(updateStatusContact),
 }
