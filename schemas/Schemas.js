@@ -28,13 +28,19 @@ const userLoginSchema = Joi.object({
     password: Joi.string().min(6).required(),
 })
 
+const emailSchema = Joi.object({
+    email: Joi.string().required(),
+})
+
 
 const schemas = {
     contactBodySchema,
     contactFavoriteSchema,
-    
+
     userRegisterSchema,
     userLoginSchema,
+
+    emailSchema,
 }
 
 module.exports = schemas;

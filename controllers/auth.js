@@ -1,13 +1,13 @@
 const bcrypt = require('bcrypt')
-const { HttpError } = require("../helpers");
+const { HttpError, sendEmail, ctrlWrapper } = require("../helpers");
 const jwt = require('jsonwebtoken');
 const { User } = require('../schemas');
 const gravatar = require('gravatar');
 const fs = require('fs/promises');
-const ctrlWrapper = require('../helpers/ctrlWrapper');
 const path = require('path');
+const { nanoid } = require('nanoid');
 
-const { SECRET_KEY } = process.env;
+const { SECRET_KEY, BASE_URL } = process.env;
 
 const avatarsDir = path.join(__dirname, '../', 'public', 'avatars')
 
@@ -21,13 +21,23 @@ async function register(req, res, next) {
     const currentUser = await User.findOne({ email: newUser.email });
 
     if (currentUser) {
-        throw new HttpError(409, "Email in use").returnError();
+        throw new HttpError(409, "Email in use");
     }
 
     newUser.password = await bcrypt.hash(newUser.password, 10);
     const avatarURL = gravatar.url(newUser.email);
+    const verificationToken = nanoid();
 
-    await User.create({ ...newUser, avatarURL })
+
+    await User.create({ ...newUser, avatarURL, verificationToken });
+
+    const verifyEmail = {
+        to: newUser.email,
+        subject: 'verify email',
+        html: `<a target='_blank' href='${BASE_URL}/api/auth/verify/${verificationToken}'>Click verify email</a>`,
+    }
+
+    await sendEmail(verifyEmail);
 
     res.status(201).json({
         user: {
@@ -43,13 +53,17 @@ async function login(req, res, next) {
     const user = await User.findOne({ email })
 
     if (!user) {
-        throw new HttpError(401, "Email or password is wrong").returnError;
+        throw new HttpError(401, "Email or password is wrong");
+    }
+
+    if (!user.verify) {
+        throw new HttpError(401, "Email not verified");
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-        throw new HttpError(401, "Email or password is wrong").returnError;
+        throw new HttpError(401, "Email or password is wrong");
     }
 
     const { _id: id } = user;
@@ -66,6 +80,43 @@ async function login(req, res, next) {
             email: user.email,
             subscription: "starter"
         }
+    })
+}
+
+async function verifyEmail(req, res, next) {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken });
+
+    if (user === null) {
+        throw new HttpError(401, 'User not found');
+    }
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: null }, { new: true })
+
+    res.json({
+        message: 'Verification successful'
+    })
+}
+
+async function resendVerifyEmail(req, res, next) {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+        throw new HttpError(401, "Email not found");
+    }
+    if (user.verify) {
+        throw new HttpError(400, "Verification has already been passed");
+    }
+
+    const verifyEmail = {
+        to: user.email,
+        subject: 'verify email',
+        html: `<a target='_blank' href='${BASE_URL}/api/auth/verify/${user.verificationToken}'>Click verify email</a>`,
+    }
+
+    await sendEmail(verifyEmail);
+
+    res.json({
+        message: 'Verify email send success',
     })
 }
 
@@ -103,6 +154,8 @@ async function updateAvatar(req, res, next) {
 
 module.exports = {
     register: ctrlWrapper(register),
+    verifyEmail: ctrlWrapper(verifyEmail),
+    resendVerifyEmail: ctrlWrapper(resendVerifyEmail),
     login: ctrlWrapper(login),
     getCurrent: ctrlWrapper(getCurrent),
     logout: ctrlWrapper(logout),
